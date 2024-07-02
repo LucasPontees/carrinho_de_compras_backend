@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Put } 
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdatePatchUserDto } from "./dto/update-patch-user.dto";
 import { UserService } from "./user.service";
+import { UpdatePutUserDto } from "./dto/update-put-user.dto";
 
 @Controller('users')
 export class UserController {
@@ -15,30 +16,22 @@ export class UserController {
 
     @Get()
     async list() {
-        return { user: [] };
+        return this.userService.list();
     }
     @Get(':id')
     async readOne(@Param('id', ParseIntPipe) id: number) {
-        return { user: {}, id };
+        return this.userService.show(id);
     }
 
     @Put(':id')
-    async update(@Param() params, @Body() { email, name, password }: CreateUserDto) {
-        return {
-            method: 'put',
-            email, name, password,
-            params
-        };
+    async update(@Body() data: UpdatePutUserDto, @Param('id', ParseIntPipe) id: number) {
+        return this.userService.update(id, data);
 
     }
 
     @Patch(':id')
-    async updatePartial(@Param() params, @Body() { email, name, password }: UpdatePatchUserDto) {
-        return {
-            method: 'patch',
-            params,
-            email, name, password
-        };
+    async updatePartial(@Body() data: UpdatePatchUserDto, @Param('id', ParseIntPipe) id: number) {
+        return this.userService.updatePartial(id, data)
     }
 
     @Delete(':id')
