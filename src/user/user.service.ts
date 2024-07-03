@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdatePutUserDto } from './dto/update-put-user.dto';
@@ -6,7 +6,7 @@ import { UpdatePatchUserDto } from './dto/update-patch-user.dto';
 
 @Injectable()
 export class UserService {
-  constructor(private readonly Prisma: PrismaService) {}
+  constructor(private readonly Prisma: PrismaService) { }
   async create({ email, name, password }: CreateUserDto) {
     return await this.Prisma.user.create({
       data: {
@@ -27,14 +27,17 @@ export class UserService {
 
   async update(
     id: number,
-    { name, email, password, birthAt }: UpdatePutUserDto,
+    { name, email, password }: UpdatePutUserDto,
   ) {
+
+    await this.exists(id);
+
+
     return this.Prisma.user.update({
       data: {
         name,
         email,
         password,
-        birthAt: birthAt ? new Date(birthAt) : null,
       },
       where: {
         id,
@@ -42,7 +45,9 @@ export class UserService {
     });
   }
   async updatePartial(id: number, data: UpdatePatchUserDto) {
-    console.log(data);
+
+    await this.exists(id);
+
 
     return this.Prisma.user.update({
       data,
@@ -50,5 +55,22 @@ export class UserService {
         id,
       },
     });
+  }
+
+  async delete(id: number) {
+
+    await this.exists(id);
+
+    return this.Prisma.user.delete({
+      where: {
+        id,
+      },
+    })
+  }
+
+  async exists(id: number) {
+    if (!(await this.show(id))) {
+      throw new NotFoundException(`Usuario com id: ${id}` + ' não encontrado');
+    }
   }
 }
